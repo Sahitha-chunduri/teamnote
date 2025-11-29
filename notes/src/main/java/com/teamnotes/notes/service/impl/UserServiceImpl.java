@@ -42,7 +42,7 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(),user.getEmail());
 
         return new AuthResponse(
                 token,
@@ -65,7 +65,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = jwtUtil.generateToken(user.getEmail());
+        String token = jwtUtil.generateToken(user.getId(), user.getEmail());
 
         return new AuthResponse(
                 token,
