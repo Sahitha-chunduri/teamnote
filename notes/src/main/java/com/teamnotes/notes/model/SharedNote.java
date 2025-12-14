@@ -1,8 +1,6 @@
 package com.teamnotes.notes.model;
 
-
 import java.time.LocalDateTime;
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,7 +30,7 @@ public class SharedNote {
     private User user;
 
     @Enumerated(EnumType.STRING)
-    private PermissionType permission; // VIEW or EDIT
+    private PermissionType permission;
 
     private LocalDateTime sharedAt;
 }

@@ -1,6 +1,5 @@
 package com.teamnotes.notes.config;
 
-
 import com.teamnotes.notes.security.JwtFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -26,14 +25,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+
         http
+            .cors(cors -> cors.and())      
             .csrf(csrf -> csrf.disable())
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/api/auth/**").permitAll()   
                     .anyRequest().authenticated()
             );
 
+        
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -43,7 +45,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // If you need AuthenticationManager elsewhere
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

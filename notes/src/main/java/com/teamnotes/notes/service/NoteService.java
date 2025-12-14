@@ -2,6 +2,8 @@ package com.teamnotes.notes.service;
 
 import java.time.LocalDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.teamnotes.notes.model.Note;
 import com.teamnotes.notes.model.PermissionType;
 import com.teamnotes.notes.model.SharedNote;
@@ -10,6 +12,7 @@ import com.teamnotes.notes.repository.NoteRepository;
 import com.teamnotes.notes.repository.SharedNoteRepository;
 import com.teamnotes.notes.repository.UserRepository;
 
+@Service
 public class NoteService {
 	@Autowired
     private UserRepository userRepository;

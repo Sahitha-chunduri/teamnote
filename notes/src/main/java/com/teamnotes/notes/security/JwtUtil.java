@@ -26,8 +26,7 @@ public class JwtUtil {
         Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userId))
-                .claim("email", email)
+                .setSubject(email)          // ✅ email as subject
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -43,15 +42,9 @@ public class JwtUtil {
         }
     }
 
-    public Long getUserIdFromToken(String token) {
-        Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
-                .parseClaimsJws(token).getBody();
-        return Long.parseLong(claims.getSubject());
-    }
-
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parserBuilder().setSigningKey(key).build()
                 .parseClaimsJws(token).getBody();
-        return claims.get("email", String.class);
+        return claims.getSubject();   // ✅ subject = email
     }
 }

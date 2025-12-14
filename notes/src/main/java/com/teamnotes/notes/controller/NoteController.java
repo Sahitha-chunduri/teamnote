@@ -1,7 +1,10 @@
 package com.teamnotes.notes.controller;
 
 import java.security.Principal;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -18,10 +21,11 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/notes")
 @RequiredArgsConstructor
 public class NoteController {
-
+	
+	@Autowired
     private final NoteService noteService;
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Note> createNote(@RequestBody Note note, Principal principal) {
         return ResponseEntity.ok(noteService.createNote(principal.getName(), note));
     }

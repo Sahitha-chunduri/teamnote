@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -41,19 +42,31 @@ public class JwtFilter extends OncePerRequestFilter {
 
         try {
             String token = parseJwt(request);
-            if (token != null && jwtUtil.validateToken(token)) {
-                Long userId = jwtUtil.getUserIdFromToken(token);
-                Optional<User> userOpt = userRepository.findById(userId);
-                if (userOpt.isPresent()) {
-                    User user = userOpt.get();
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(user, null, null);
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+
+            if (token != null && jwtUtil.validateToken(token)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                String email = jwtUtil.getEmailFromToken(token);   // ✅ email
+
+                User user = userRepository.findByEmail(email)
+                        .orElseThrow();
+
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                user.getEmail(),   // principal = email
+                                null,
+                                List.of()
+                        );
+
+                authentication.setDetails(
+                        new WebAuthenticationDetailsSource().buildDetails(request)
+                );
+
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
+
         } catch (Exception ex) {
-            // If token invalid or DB error, do not set authentication
+            // ignore → request will be unauthenticated
         }
 
         filterChain.doFilter(request, response);
