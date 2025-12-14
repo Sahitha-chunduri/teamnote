@@ -9,5 +9,6 @@ import java.util.*;
 
 public interface SharedNoteRepository extends JpaRepository<SharedNote, Long> {
     List<SharedNote> findByUser(User user);
+    List<SharedNote> findByNote(Note note);
     Optional<SharedNote> findByNoteAndUser(Note note, User user);
 }
