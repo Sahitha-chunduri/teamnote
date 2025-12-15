@@ -1,0 +1,142 @@
+import React, { createContext, useState, useEffect } from 'react';
+import { notesService } from '../services/api';
+import { mockUserNotes, mockSharedNotes } from '../data/mockData';
+import { useAuth } from './AuthContext';
+
+export const NotesContext = createContext();
+
+export const NotesProvider = ({ children }) => {
+  const [userNotes, setUserNotes] = useState([]);
+  const [sharedNotes, setSharedNotes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchUserNotes();
+    } else {
+      setUserNotes([]);
+      setSharedNotes([]);
+      setLoading(false);
+      setError(null);
+    }
+  }, [isAuthenticated]);
+
+  const fetchUserNotes = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const notes = await notesService.getUserNotes();
+      setUserNotes(Array.isArray(notes) ? notes : []);
+      if (notes && notes.shared) setSharedNotes(Array.isArray(notes.shared) ? notes.shared : []);
+    } catch (err) {
+      console.error('Failed to fetch notes:', err);
+      setError('Failed to load documents from server — using local mock data');
+      setUserNotes(mockUserNotes);
+      setSharedNotes(mockSharedNotes);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createNote = async (title, description) => {
+    try {
+      const newNote = await notesService.createNote(title, description);
+      setUserNotes([...userNotes, newNote]);
+      return newNote;
+    } catch (err) {
+      console.error('Error creating note:', err);
+      setError('Failed to create document');
+      throw err;
+    }
+  };
+
+  const updateNote = async (id, updates) => {
+    try {
+      setUserNotes(userNotes.map(note =>
+        note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString().split('T')[0] } : note
+      ));
+    } catch (err) {
+      console.error('Error updating note:', err);
+      setError('Failed to update document');
+      throw err;
+    }
+  };
+
+  const deleteNote = async (id) => {
+    try {
+      await notesService.deleteNote(id);
+      setUserNotes(userNotes.filter(note => note.id !== id));
+    } catch (err) {
+      console.error('Error deleting note:', err);
+      setError('Failed to delete document');
+      throw err;
+    }
+  };
+
+  const shareNoteWithUser = async (noteId, userId, email, name, permission = 'view') => {
+    try {
+      await notesService.shareNote(noteId, userId, permission);
+      setUserNotes(userNotes.map(note => {
+        if (note.id === noteId) {
+          const existingShare = note.sharedWith?.find(s => s.id === userId);
+          if (existingShare) {
+            return {
+              ...note,
+              sharedWith: note.sharedWith.map(s =>
+                s.id === userId ? { ...s, permission } : s
+              )
+            };
+          }
+          return {
+            ...note,
+            sharedWith: [...(note.sharedWith || []), { id: userId, email, name, permission }]
+          };
+        }
+        return note;
+      }));
+    } catch (err) {
+      console.error('Error sharing note:', err);
+      setError('Failed to share document');
+      throw err;
+    }
+  };
+
+  const removeNoteShare = async (noteId, userId) => {
+    try {
+      setUserNotes(userNotes.map(note =>
+        note.id === noteId
+          ? { ...note, sharedWith: note.sharedWith.filter(s => s.id !== userId) }
+          : note
+      ));
+    } catch (err) {
+      console.error('Error removing share:', err);
+      setError('Failed to remove share');
+      throw err;
+    }
+  };
+
+  const value = {
+    userNotes,
+    sharedNotes,
+    loading,
+    error,
+    createNote,
+    updateNote,
+    deleteNote,
+    shareNoteWithUser,
+    removeNoteShare,
+    refetchNotes: fetchUserNotes
+  };
+
+  return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;
+};
+
+export const useNotes = () => {
+  const context = React.useContext(NotesContext);
+  if (!context) {
+    throw new Error('useNotes must be used within NotesProvider');
+  }
+  return context;
+};
