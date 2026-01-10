@@ -46,7 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
             if (token != null && jwtUtil.validateToken(token)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                String email = jwtUtil.getEmailFromToken(token);   // ✅ email
+                String email = jwtUtil.getEmailFromToken(token);   
 
                 User user = userRepository.findByEmail(email)
                         .orElseThrow();
@@ -66,7 +66,7 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception ex) {
-            // ignore → request will be unauthenticated
+            //request will be unauthenticated
         }
 
         filterChain.doFilter(request, response);

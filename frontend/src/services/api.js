@@ -158,6 +158,16 @@ export const notesService = {
     }
   },
 
+  getSharedNotes: async () => {
+    try {
+      const response = await apiRequest('/notes/shared-with-me');
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching shared notes:', error);
+      throw error;
+    }
+  },
+
   createNote: async (title, description) => {
     try {
       const response = await apiRequest('/notes/create', {
@@ -178,7 +188,19 @@ export const notesService = {
         method: 'DELETE'
       });
       if (!response.ok) throw new Error('Failed to delete note');
-      return await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return await response.json();
+      }
+
+      // If the backend returns plain text (e.g. "Note deleted") or no body,
+      // avoid calling response.json() which throws on non-JSON bodies.
+      try {
+        const text = await response.text();
+        return text;
+      } catch (e) {
+        return null;
+      }
     } catch (error) {
       console.error('Error deleting note:', error);
       throw error;
@@ -187,12 +209,20 @@ export const notesService = {
 
   shareNote: async (noteId, email, permission) => {
     try {
-      const qs = `?email=${encodeURIComponent(email)}&permission=${encodeURIComponent(permission)}`;
+      const qs = `?email=${encodeURIComponent(email)}&permission=${encodeURIComponent(String(permission).toUpperCase())}`;
       const response = await apiRequest(`/notes/share/${noteId}${qs}`, {
         method: 'POST'
       });
-      if (!response.ok) throw new Error('Failed to share note');
-      return await response.json();
+      if (!response.ok) {
+        let body = '';
+        try { body = await response.text(); } catch (e) { /* ignore */ }
+        const msg = body || response.statusText || `HTTP ${response.status}`;
+        throw new Error(msg);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) return await response.json();
+      try { return JSON.parse(await response.text()); } catch (e) { return null; }
     } catch (error) {
       console.error('Error sharing note:', error);
       throw error;

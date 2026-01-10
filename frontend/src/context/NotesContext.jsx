@@ -28,8 +28,9 @@ export const NotesProvider = ({ children }) => {
     setError(null);
     try {
       const notes = await notesService.getUserNotes();
+      const shared = await notesService.getSharedNotes();
       setUserNotes(Array.isArray(notes) ? notes : []);
-      if (notes && notes.shared) setSharedNotes(Array.isArray(notes.shared) ? notes.shared : []);
+      setSharedNotes(Array.isArray(shared) ? shared : []);
     } catch (err) {
       console.error('Failed to fetch notes:', err);
       setError('Failed to load documents from server — using local mock data');
@@ -77,21 +78,31 @@ export const NotesProvider = ({ children }) => {
 
   const shareNoteWithUser = async (noteId, userId, email, name, permission = 'view') => {
     try {
-      await notesService.shareNote(noteId, userId, permission);
+      // Backend expects email + permission
+      const shared = await notesService.shareNote(noteId, email, permission);
+
       setUserNotes(userNotes.map(note => {
         if (note.id === noteId) {
-          const existingShare = note.sharedWith?.find(s => s.id === userId);
+          const existingShare = note.sharedWith?.find(s => s.email === (shared?.user?.email || email));
           if (existingShare) {
             return {
               ...note,
               sharedWith: note.sharedWith.map(s =>
-                s.id === userId ? { ...s, permission } : s
+                s.email === (shared?.user?.email || email) ? { ...s, permission: shared?.permission || permission } : s
               )
             };
           }
+
+          const newShare = {
+            id: shared?.user?.id || userId || Date.now(),
+            email: shared?.user?.email || email,
+            name: shared?.user?.name || name || email,
+            permission: shared?.permission || permission
+          };
+
           return {
             ...note,
-            sharedWith: [...(note.sharedWith || []), { id: userId, email, name, permission }]
+            sharedWith: [...(note.sharedWith || []), newShare]
           };
         }
         return note;

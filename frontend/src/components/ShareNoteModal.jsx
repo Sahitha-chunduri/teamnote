@@ -16,17 +16,10 @@ const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare }) => {
         setPermission('view');
       }
     } else if (searchEmail.trim()) {
-      // For custom email input
-      const user = mockAvailableUsers.find(u => u.email === searchEmail);
-      if (user) {
-        onShare(note.id, user.id, user.email, user.name, permission);
-        setSearchEmail('');
-        setPermission('view');
-      } else {
-        // In a real app, this would create an invitation for non-registered users
-        alert('User not found in system. In production, this would send an invitation.');
-        setSearchEmail('');
-      }
+      // For custom email input - allow sharing by email even if user is not in mock list
+      onShare(note.id, null, searchEmail.trim(), null, permission);
+      setSearchEmail('');
+      setPermission('view');
     }
   };
 
@@ -71,6 +64,19 @@ const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare }) => {
                 ))}
               </select>
             </div>
+            <div className="mb-3">
+              <label htmlFor="customEmail" className="form-label">
+                Or enter email to share
+              </label>
+              <input
+                id="customEmail"
+                className="form-control"
+                type="email"
+                placeholder="user@example.com"
+                value={searchEmail}
+                onChange={(e) => setSearchEmail(e.target.value)}
+              />
+            </div>
 
             <div className="mb-3">
               <label htmlFor="permission" className="form-label">
@@ -90,7 +96,7 @@ const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare }) => {
             <button
               className="btn btn-primary w-100"
               onClick={handleShare}
-              disabled={!selectedUser}
+              disabled={!selectedUser && !searchEmail.trim()}
             >
               Add Person
             </button>
