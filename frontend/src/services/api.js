@@ -193,8 +193,7 @@ export const notesService = {
         return await response.json();
       }
 
-      // If the backend returns plain text (e.g. "Note deleted") or no body,
-      // avoid calling response.json() which throws on non-JSON bodies.
+      
       try {
         const text = await response.text();
         return text;
@@ -215,7 +214,9 @@ export const notesService = {
       });
       if (!response.ok) {
         let body = '';
-        try { body = await response.text(); } catch (e) { /* ignore */ }
+        try { 
+          body = await response.text();
+        } catch (e) {}
         const msg = body || response.statusText || `HTTP ${response.status}`;
         throw new Error(msg);
       }

@@ -7,6 +7,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   const login = async (email, password) => {
     setLoading(true);
@@ -103,12 +104,14 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       tokenService.removeToken();
     }
+    setIsInitializing(false);
   }, []);
 
   const value = {
     user,
     isAuthenticated,
     loading,
+    isInitializing,
     login,
     signup,
     logout

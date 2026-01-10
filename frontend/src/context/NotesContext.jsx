@@ -78,7 +78,6 @@ export const NotesProvider = ({ children }) => {
 
   const shareNoteWithUser = async (noteId, userId, email, name, permission = 'view') => {
     try {
-      // Backend expects email + permission
       const shared = await notesService.shareNote(noteId, email, permission);
 
       setUserNotes(userNotes.map(note => {
@@ -109,7 +108,8 @@ export const NotesProvider = ({ children }) => {
       }));
     } catch (err) {
       console.error('Error sharing note:', err);
-      setError('Failed to share document');
+      const errorMsg = err.message || 'Failed to share document';
+      setError(errorMsg);
       throw err;
     }
   };

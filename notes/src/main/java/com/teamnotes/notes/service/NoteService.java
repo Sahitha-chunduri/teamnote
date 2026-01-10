@@ -40,9 +40,17 @@ public class NoteService {
 	}
 	
 	// share notes with another user
-	public SharedNote shareNote(Long noteId, String sharedEmail, PermissionType permission) {
-	    Note note = noteRepository.findById(noteId).orElseThrow();
-	    User user = userRepository.findByEmail(sharedEmail).orElseThrow();
+	public SharedNote shareNote(Long noteId, String sharedEmail, PermissionType permission, String ownerEmail) {
+	    Note note = noteRepository.findById(noteId)
+	        .orElseThrow(() -> new RuntimeException("Note not found"));
+	    
+	    // Verify that the logged-in user is the owner of the note
+	    if (!note.getOwner().getEmail().equals(ownerEmail)) {
+	        throw new RuntimeException("Only the owner can share this note");
+	    }
+	    
+	    User user = userRepository.findByEmail(sharedEmail)
+	        .orElseThrow(() -> new RuntimeException("User not found: " + sharedEmail));
 
 	    SharedNote sharedNote = new SharedNote();
 	    sharedNote.setNote(note);

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import NoteCard from '../components/NoteCard';
 import CreateNoteModal from '../components/CreateNoteModal';
 import ShareNoteModal from '../components/ShareNoteModal';
-import Navbar from '../components/Navbar';
 import { useNotes } from '../context/NotesContext';
 import './Dashboard.css';
 
@@ -38,7 +37,6 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-wrapper">
-      <Navbar />
       <div className="dashboard-container">
       <div className="dashboard-content">
         <div className="create-document-section">

@@ -43,9 +43,10 @@ public class NoteController {
     public ResponseEntity<SharedNote> share(
             @PathVariable Long noteId,
             @RequestParam String email,
-            @RequestParam PermissionType permission) {
+            @RequestParam PermissionType permission,
+            Principal principal) {
 
-        return ResponseEntity.ok(noteService.shareNote(noteId, email, permission));
+        return ResponseEntity.ok(noteService.shareNote(noteId, email, permission, principal.getName()));
     }
     
     // get all my notes
