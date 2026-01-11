@@ -29,8 +29,19 @@ export const NotesProvider = ({ children }) => {
     try {
       const notes = await notesService.getUserNotes();
       const shared = await notesService.getSharedNotes();
-      setUserNotes(Array.isArray(notes) ? notes : []);
-      setSharedNotes(Array.isArray(shared) ? shared : []);
+      
+      const normalizedNotes = Array.isArray(notes) ? notes.map(note => ({
+        ...note,
+        permission: note.permission ? String(note.permission).toLowerCase() : note.permission
+      })) : [];
+      
+      const normalizedShared = Array.isArray(shared) ? shared.map(note => ({
+        ...note,
+        permission: note.permission ? String(note.permission).toLowerCase() : note.permission
+      })) : [];
+      
+      setUserNotes(normalizedNotes);
+      setSharedNotes(normalizedShared);
     } catch (err) {
       console.error('Failed to fetch notes:', err);
       setError('Failed to load documents from server — using local mock data');
@@ -56,7 +67,7 @@ export const NotesProvider = ({ children }) => {
   const updateNote = async (id, updates) => {
     try {
       setUserNotes(userNotes.map(note =>
-        note.id === id ? { ...note, ...updates, updatedAt: new Date().toISOString().split('T')[0] } : note
+        note.id === id ? { ...note, ...updates, updatedAt: updates.updatedAt || new Date().toISOString().split('T')[0] } : note
       ));
     } catch (err) {
       console.error('Error updating note:', err);
@@ -79,6 +90,7 @@ export const NotesProvider = ({ children }) => {
   const shareNoteWithUser = async (noteId, userId, email, name, permission = 'view') => {
     try {
       const shared = await notesService.shareNote(noteId, email, permission);
+      const normalizedPermission = shared?.permission ? String(shared.permission).toLowerCase() : permission;
 
       setUserNotes(userNotes.map(note => {
         if (note.id === noteId) {
@@ -87,7 +99,7 @@ export const NotesProvider = ({ children }) => {
             return {
               ...note,
               sharedWith: note.sharedWith.map(s =>
-                s.email === (shared?.user?.email || email) ? { ...s, permission: shared?.permission || permission } : s
+                s.email === (shared?.user?.email || email) ? { ...s, permission: normalizedPermission } : s
               )
             };
           }
@@ -96,7 +108,7 @@ export const NotesProvider = ({ children }) => {
             id: shared?.user?.id || userId || Date.now(),
             email: shared?.user?.email || email,
             name: shared?.user?.name || name || email,
-            permission: shared?.permission || permission
+            permission: normalizedPermission
           };
 
           return {
@@ -106,11 +118,26 @@ export const NotesProvider = ({ children }) => {
         }
         return note;
       }));
+      
+      await fetchSharedNotes();
     } catch (err) {
       console.error('Error sharing note:', err);
       const errorMsg = err.message || 'Failed to share document';
       setError(errorMsg);
       throw err;
+    }
+  };
+
+  const fetchSharedNotes = async () => {
+    try {
+      const shared = await notesService.getSharedNotes();
+      const normalizedShared = Array.isArray(shared) ? shared.map(note => ({
+        ...note,
+        permission: note.permission ? String(note.permission).toLowerCase() : note.permission
+      })) : [];
+      setSharedNotes(normalizedShared);
+    } catch (err) {
+      console.error('Failed to fetch shared notes:', err);
     }
   };
 
@@ -121,9 +148,37 @@ export const NotesProvider = ({ children }) => {
           ? { ...note, sharedWith: note.sharedWith.filter(s => s.id !== userId) }
           : note
       ));
+      
+      await fetchSharedNotes();
     } catch (err) {
       console.error('Error removing share:', err);
       setError('Failed to remove share');
+      throw err;
+    }
+  };
+
+  const updateSharePermission = async (noteId, email, permission) => {
+    try {
+      const response = await notesService.updateSharePermission(noteId, email, permission);
+      const normalizedPermission = response?.permission ? String(response.permission).toLowerCase() : permission;
+
+      setUserNotes(userNotes.map(note => {
+        if (note.id === noteId) {
+          return {
+            ...note,
+            sharedWith: note.sharedWith.map(s =>
+              s.email === email ? { ...s, permission: normalizedPermission } : s
+            )
+          };
+        }
+        return note;
+      }));
+      
+
+      await fetchSharedNotes();
+    } catch (err) {
+      console.error('Error updating share permission:', err);
+      setError('Failed to update share permission');
       throw err;
     }
   };
@@ -138,7 +193,9 @@ export const NotesProvider = ({ children }) => {
     deleteNote,
     shareNoteWithUser,
     removeNoteShare,
-    refetchNotes: fetchUserNotes
+    updateSharePermission,
+    refetchNotes: fetchUserNotes,
+    refetchSharedNotes: fetchSharedNotes
   };
 
   return <NotesContext.Provider value={value}>{children}</NotesContext.Provider>;

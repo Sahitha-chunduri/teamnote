@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import NoteCard from '../components/NoteCard';
 import CreateNoteModal from '../components/CreateNoteModal';
 import ShareNoteModal from '../components/ShareNoteModal';
@@ -6,15 +7,18 @@ import { useNotes } from '../context/NotesContext';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { userNotes, sharedNotes, loading, error, createNote, deleteNote, shareNoteWithUser, removeNoteShare } = useNotes();
+  const navigate = useNavigate();
+  const { userNotes, sharedNotes, loading, error, createNote, deleteNote, shareNoteWithUser, removeNoteShare, updateSharePermission } = useNotes();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
-  const handleCreateNote = async (title, description) => {
+  const handleCreateNote = async (title) => {
     try {
-      await createNote(title, description);
+      const newNote = await createNote(title, '');
       setShowCreateModal(false);
+      // Redirect to editor
+      navigate(`/editor/${newNote.id}`);
     } catch (err) {
       console.error('Failed to create note:', err);
     }
@@ -127,6 +131,7 @@ const Dashboard = () => {
           note={selectedNote}
           onShare={shareNoteWithUser}
           onRemoveShare={removeNoteShare}
+          onUpdateShare={updateSharePermission}
         />
       )}
     </div>

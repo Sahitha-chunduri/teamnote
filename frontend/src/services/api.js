@@ -206,6 +206,20 @@ export const notesService = {
     }
   },
 
+  updateNote: async (noteId, updates) => {
+    try {
+      const response = await apiRequest(`/notes/${noteId}`, {
+        method: 'PUT',
+        body: JSON.stringify(updates)
+      });
+      if (!response.ok) throw new Error('Failed to update note');
+      return await response.json();
+    } catch (error) {
+      console.error('Error updating note:', error);
+      throw error;
+    }
+  },
+
   shareNote: async (noteId, email, permission) => {
     try {
       const qs = `?email=${encodeURIComponent(email)}&permission=${encodeURIComponent(String(permission).toUpperCase())}`;
@@ -226,6 +240,30 @@ export const notesService = {
       try { return JSON.parse(await response.text()); } catch (e) { return null; }
     } catch (error) {
       console.error('Error sharing note:', error);
+      throw error;
+    }
+  },
+
+  updateSharePermission: async (noteId, email, permission) => {
+    try {
+      const qs = `?email=${encodeURIComponent(email)}&permission=${encodeURIComponent(String(permission).toUpperCase())}`;
+      const response = await apiRequest(`/notes/share/${noteId}${qs}`, {
+        method: 'PUT'
+      });
+      if (!response.ok) {
+        let body = '';
+        try { 
+          body = await response.text();
+        } catch (e) {}
+        const msg = body || response.statusText || `HTTP ${response.status}`;
+        throw new Error(msg);
+      }
+
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) return await response.json();
+      try { return JSON.parse(await response.text()); } catch (e) { return null; }
+    } catch (error) {
+      console.error('Error updating share permission:', error);
       throw error;
     }
   }

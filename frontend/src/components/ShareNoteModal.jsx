@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { mockAvailableUsers } from '../data/mockData';
 import './ShareNoteModal.css';
 
-const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare }) => {
+const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare, onUpdateShare }) => {
   const [selectedUser, setSelectedUser] = useState('');
   const [permission, setPermission] = useState('view');
   const [searchEmail, setSearchEmail] = useState('');
@@ -10,13 +10,22 @@ const ShareNoteModal = ({ show, onClose, note, onShare, onRemoveShare }) => {
   const handleShare = () => {
     if (selectedUser) {
       const user = mockAvailableUsers.find(u => u.id === parseInt(selectedUser));
-      if (user && !note.sharedWith.find(s => s.id === user.id)) {
-        onShare(note.id, user.id, user.email, user.name, permission);
+      if (user) {
+        const existingShare = note.sharedWith?.find(s => s.id === user.id);
+        if (existingShare && existingShare.permission !== permission) {
+
+          if (onUpdateShare) {
+            onUpdateShare(note.id, user.email, permission);
+          }
+        } else if (!existingShare) {
+          
+          onShare(note.id, user.id, user.email, user.name, permission);
+        }
         setSelectedUser('');
         setPermission('view');
       }
     } else if (searchEmail.trim()) {
-      // For custom email input - allow sharing by email even if user is not in mock list
+     
       onShare(note.id, null, searchEmail.trim(), null, permission);
       setSearchEmail('');
       setPermission('view');

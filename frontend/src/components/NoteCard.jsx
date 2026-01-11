@@ -1,7 +1,10 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './NoteCard.css';
 
 const NoteCard = ({ note, isOwned = false, onShare = null, onDelete = null, onEdit = null }) => {
+  const navigate = useNavigate();
+
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -10,8 +13,12 @@ const NoteCard = ({ note, isOwned = false, onShare = null, onDelete = null, onEd
     });
   };
 
+  const handleCardClick = () => {
+    navigate(`/editor/${note.id}`);
+  };
+
   return (
-    <div className="note-card">
+    <div className="note-card" onClick={handleCardClick} style={{ cursor: 'pointer' }}>
       <div className="note-card-header">
         <h5 className="note-title">{note.title}</h5>
         {isOwned && (
@@ -24,7 +31,7 @@ const NoteCard = ({ note, isOwned = false, onShare = null, onDelete = null, onEd
         )}
       </div>
 
-      <p className="note-description">{note.description}</p>
+      <p className="note-description">{note.content || note.description}</p>
 
       {isOwned && note.sharedWith && note.sharedWith.length > 0 && (
         <div className="shared-with">
@@ -42,9 +49,9 @@ const NoteCard = ({ note, isOwned = false, onShare = null, onDelete = null, onEd
         </div>
       )}
 
-      {!isOwned && note.ownedBy && (
+      {!isOwned && note.ownerName && (
         <p className="text-muted mb-2">
-          <small>Shared by <strong>{note.ownedBy.name}</strong></small>
+          <small>Shared by <strong>{note.ownerName}</strong></small>
         </p>
       )}
 
@@ -52,7 +59,7 @@ const NoteCard = ({ note, isOwned = false, onShare = null, onDelete = null, onEd
         <small className="text-muted">
           {formatDate(note.updatedAt)}
         </small>
-        <div className="note-actions">
+        <div className="note-actions" onClick={(e) => e.stopPropagation()}>
           {isOwned && onShare && (
             <button 
               className="btn btn-sm btn-outline-primary"

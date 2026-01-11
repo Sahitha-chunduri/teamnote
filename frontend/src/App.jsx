@@ -6,6 +6,7 @@ import Navbar from './components/Navbar';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import Dashboard from './pages/Dashboard';
+import DocumentEditor from './pages/DocumentEditor';
 import ProtectedRoute from './utils/ProtectedRoute';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
@@ -25,6 +26,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/editor/:noteId"
+                element={
+                  <ProtectedRoute>
+                    <DocumentEditor />
                   </ProtectedRoute>
                 }
               />

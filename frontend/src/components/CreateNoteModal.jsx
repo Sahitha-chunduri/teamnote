@@ -3,14 +3,12 @@ import './CreateNoteModal.css';
 
 const CreateNoteModal = ({ show, onClose, onCreate }) => {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (title.trim()) {
-      onCreate(title, description);
+      onCreate(title);
       setTitle('');
-      setDescription('');
     }
   };
 
@@ -40,21 +38,12 @@ const CreateNoteModal = ({ show, onClose, onCreate }) => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g., Project Proposal"
+                autoFocus
                 required
               />
-            </div>
-            <div className="mb-3">
-              <label htmlFor="description" className="form-label">
-                Description
-              </label>
-              <textarea
-                className="form-control"
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief description of your document"
-                rows="3"
-              ></textarea>
+              <small className="form-text text-muted">
+                You can start editing right after creation
+              </small>
             </div>
           </div>
           <div className="modal-footer">
@@ -69,7 +58,7 @@ const CreateNoteModal = ({ show, onClose, onCreate }) => {
               type="submit"
               className="btn btn-primary"
             >
-              Create Document
+              Create & Open Editor
             </button>
           </div>
         </form>
